@@ -27,7 +27,13 @@ for i=1,SquaresPerRow do
 end
 
 CellMat[1][1] = 1
+CellMat[1][2] = 1
+CellMat[2][1] = 1
 CellMat[1][8] = 1
+
+CellMat[10][10] = 1
+CellMat[11][10] = 1
+CellMat[12][10] = 1
 
 local function setCellColor(x, y)
     gfx.setColor(gfx.kColorWhite)
@@ -68,10 +74,15 @@ local function iterateMatrix(case)
                 setCellColor(i,j)
                 gfx.fillRect(xPos, yPos, RectWidth, RectHeight)
             elseif case == 'next' then
+                local liveNeighbors = getLiveNeighbors(i, j)
                 if CellMat[i][j] == 1 then
-                    -- NextFrame[i+1][j+1] = 1
-                    -- print('i: ' .. i .. '  j: ' .. j)
-                    print(getLiveNeighbors(i, j))
+                    if liveNeighbors < 2 or liveNeighbors > 3 then
+                        NextFrame[i][j] = 0
+                    elseif liveNeighbors == 2 or liveNeighbors == 3 then
+                        NextFrame[i][j] = 1
+                    end
+                elseif liveNeighbors == 3 then
+                    NextFrame[i][j] = 1
                 end
             elseif case == 'set' then
                 CellMat[i][j] = NextFrame[i][j]
