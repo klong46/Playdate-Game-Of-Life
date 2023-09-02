@@ -36,6 +36,27 @@ local function setCellColor(x, y)
     end
 end
 
+local function getLiveNeighbors(x, y)
+    local xx = 0
+    local yy = 0
+    local liveNeighbors = 0
+    for i = -1, 1, 1 do
+        for j = -1, 1, 1 do
+            local validX = not (x + i == 0 or x + i > SquaresPerRow)
+            local validY = not (y + j == 0 or y + j > SquaresPerRow)
+            local notSame = not (i == 0 and j == 0)
+            if validX and validY and notSame then
+                if CellMat[x+i][y+j] == 1 then
+                    -- print('x: ' .. x .. '  y: ' .. y)
+                    -- print('i: ' .. i .. '  j: ' .. j)
+                    liveNeighbors += 1
+                end
+            end
+        end
+    end
+    return liveNeighbors
+end
+
 local function iterateMatrix(case)
     local xPos = 0
     local yPos = 0
@@ -48,7 +69,9 @@ local function iterateMatrix(case)
                 gfx.fillRect(xPos, yPos, RectWidth, RectHeight)
             elseif case == 'next' then
                 if CellMat[i][j] == 1 then
-                    NextFrame[i+1][j+1] = 1
+                    -- NextFrame[i+1][j+1] = 1
+                    -- print('i: ' .. i .. '  j: ' .. j)
+                    print(getLiveNeighbors(i, j))
                 end
             elseif case == 'set' then
                 CellMat[i][j] = NextFrame[i][j]
@@ -57,9 +80,7 @@ local function iterateMatrix(case)
     end
 end
 
-local function getNextFrame()
-    
-end
+
 
 iterateMatrix('update')
 function playdate.update()
@@ -67,8 +88,6 @@ function playdate.update()
     Frames += ticks
     if ticks ~= 0 then
         gfx.clear()
-        -- CellMat = NextFrame
-        getNextFrame()
         iterateMatrix('next')
         iterateMatrix('set')
         iterateMatrix('update')
