@@ -97,8 +97,10 @@ end
 
 local function createCursor()
     gfx.setColor(gfx.kColorBlack)
+    local checkerboard = { 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55 }
+    gfx.setPattern(checkerboard)
     gfx.setLineWidth(1)
-    gfx.drawRect((PickerPos.x-1) * RectWidth, (PickerPos.y-1) * RectHeight, RectWidth, RectHeight)
+    gfx.fillRect((PickerPos.x-1) * RectWidth, (PickerPos.y-1) * RectHeight, RectWidth, RectHeight)
 end
 
 
