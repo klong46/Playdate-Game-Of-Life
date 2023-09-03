@@ -7,6 +7,7 @@ CRANK_SPEED = 6;
 SquaresPerRow = 40;
 RectWidth = 400/SquaresPerRow
 RectHeight = 240/SquaresPerRow
+PickerPos = {x = 15, y = 15}
 Frames = 1
 Done = false
 
@@ -34,6 +35,7 @@ CellMat[1][8] = 1
 CellMat[10][10] = 1
 CellMat[11][10] = 1
 CellMat[12][10] = 1
+CellMat[16][16] = 1
 
 local function setCellColor(x, y)
     gfx.setColor(gfx.kColorWhite)
@@ -43,8 +45,6 @@ local function setCellColor(x, y)
 end
 
 local function getLiveNeighbors(x, y)
-    local xx = 0
-    local yy = 0
     local liveNeighbors = 0
     for i = -1, 1, 1 do
         for j = -1, 1, 1 do
@@ -69,10 +69,14 @@ local function iterateMatrix(case)
     for i = 1, SquaresPerRow, 1 do
         for j = 1, SquaresPerRow, 1 do
             if case == 'update' then
+                local notPickerPos = not (i == PickerPos.x and j == PickerPos.y)
                 xPos = (j-1) * RectWidth
                 yPos = (i-1) * RectHeight
                 setCellColor(i,j)
-                gfx.fillRect(xPos, yPos, RectWidth, RectHeight)
+                if notPickerPos then
+                    -- print('i: ' .. i .. '  j: ' .. j)
+                    gfx.fillRect(xPos, yPos, RectWidth, RectHeight)
+                end
             elseif case == 'next' then
                 local liveNeighbors = getLiveNeighbors(i, j)
                 if CellMat[i][j] == 1 then
@@ -91,14 +95,21 @@ local function iterateMatrix(case)
     end
 end
 
+local function createCursor()
+    gfx.setColor(gfx.kColorBlack)
+    gfx.setLineWidth(1)
+    gfx.drawRect((PickerPos.x-1) * RectWidth, (PickerPos.y-1) * RectHeight, RectWidth, RectHeight)
+end
 
 
 iterateMatrix('update')
+createCursor()
 function playdate.update()
     local ticks = playdate.getCrankTicks(CRANK_SPEED)
     Frames += ticks
     if ticks ~= 0 then
-        gfx.clear()
+        -- gfx.clear()
+        -- createPicker()
         iterateMatrix('next')
         iterateMatrix('set')
         iterateMatrix('update')
