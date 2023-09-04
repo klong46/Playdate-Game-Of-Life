@@ -1,5 +1,9 @@
 import "CoreLibs/crank"
 
+-- print helpers:
+-- print('x: ' .. x .. '  y: ' .. y)
+-- print('i: ' .. i .. '  j: ' .. j)
+
 local gfx = playdate.graphics
 
 CRANK_SPEED = 6;
@@ -52,8 +56,6 @@ local function getLiveNeighbors(x, y)
             local notSame = not (i == 0 and j == 0)
             if validX and validY and notSame then
                 if CellMat[x+i][y+j] == 1 then
-                    -- print('x: ' .. x .. '  y: ' .. y)
-                    -- print('i: ' .. i .. '  j: ' .. j)
                     liveNeighbors += 1
                 end
             end
@@ -73,7 +75,6 @@ local function iterateMatrix(case)
                 yPos = (j-1) * RectHeight
                 setCellColor(i,j)
                 if notCursor then
-                    -- print('i: ' .. i .. '  j: ' .. j)
                     gfx.fillRect(xPos, yPos, RectWidth, RectHeight)
                 end
             elseif case == 'next' then
@@ -145,7 +146,11 @@ function playdate.downButtonDown()
 end
 
 function playdate.AButtonDown()
-    CellMat[Cursor.x][Cursor.y] = 1
+    if CellMat[Cursor.x][Cursor.y] == 0 then
+        CellMat[Cursor.x][Cursor.y] = 1
+    else
+        CellMat[Cursor.x][Cursor.y] = 0
+    end
 end
 
 iterateMatrix('update')
