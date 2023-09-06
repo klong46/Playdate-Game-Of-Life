@@ -6,7 +6,7 @@ import "CoreLibs/crank"
 
 local gfx = playdate.graphics
 
-CRANK_SPEED = 6;
+CRANK_SPEED = 10;
 SquarePerSide = 10;
 RectWidth = 0
 RectHeight = 0
@@ -101,36 +101,50 @@ local function moveCursor(x, y)
     setCursor()
 end
 
+local function changeCellColor()
+    if CellMat[Cursor.x][Cursor.y] == 0 then
+        CellMat[Cursor.x][Cursor.y] = 1
+    else
+        CellMat[Cursor.x][Cursor.y] = 0
+    end
+end
+
+local function changeContinuousCells()
+    if playdate.buttonIsPressed(playdate.kButtonA) then
+        changeCellColor()
+    end
+end
+
 function playdate.leftButtonDown()
     if Cursor.x > 1 then
         moveCursor(-1,0)
+        changeContinuousCells()
     end
 end
 
 function playdate.rightButtonDown()
     if Cursor.x < SquarePerSide then
         moveCursor(1,0)
+        changeContinuousCells()
     end
 end
 
 function playdate.upButtonDown()
     if Cursor.y > 1 then
         moveCursor(0,-1)
+        changeContinuousCells()
     end
 end
 
 function playdate.downButtonDown()
     if Cursor.y < SquarePerSide then
         moveCursor(0,1)
+        changeContinuousCells()
     end
 end
 
 function playdate.AButtonDown()
-    if CellMat[Cursor.x][Cursor.y] == 0 then
-        CellMat[Cursor.x][Cursor.y] = 1
-    else
-        CellMat[Cursor.x][Cursor.y] = 0
-    end
+    changeCellColor()
 end
 
 local function resetGrid(size)
@@ -157,15 +171,16 @@ end
 resetGrid(10)
 setCursor()
 local menu = playdate.getSystemMenu()
-menu:addMenuItem("10x10", function()
-    resetGrid(10)
+menu:addMenuItem("40x40", function()
+    resetGrid(40)
 end)
 menu:addMenuItem("20x20", function()
     resetGrid(20)
 end)
-menu:addMenuItem("40x40", function()
-    resetGrid(40)
+menu:addMenuItem("10x10", function()
+    resetGrid(10)
 end)
+
 function playdate.update()
     local ticks = playdate.getCrankTicks(CRANK_SPEED)
     Frames += ticks
