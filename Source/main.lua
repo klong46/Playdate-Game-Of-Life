@@ -8,37 +8,13 @@ local gfx = playdate.graphics
 
 CRANK_SPEED = 6;
 
-SQUARES_PER_SIDE = 20;
-RectWidth = 400/SQUARES_PER_SIDE
-RectHeight = 240/SQUARES_PER_SIDE
-Cursor = {x = 12, y = 12}
+SquarePerSide = 5;
+RectWidth = 0
+RectHeight = 0
+Cursor = {x = 1, y = 1}
 Frames = 1
-
 CellMat = {}
-for i=1,SQUARES_PER_SIDE do
-    CellMat[i] = {}
-  for j=1,SQUARES_PER_SIDE do
-    CellMat[i][j] = 0
-  end
-end
-
 NextFrame = {}
-for i=1,SQUARES_PER_SIDE do
-    NextFrame[i] = {}
-  for j=1,SQUARES_PER_SIDE do
-    NextFrame[i][j] = 0
-  end
-end
-
-CellMat[1][1] = 1
-CellMat[1][2] = 1
-CellMat[2][1] = 1
-CellMat[1][8] = 1
-
-CellMat[10][10] = 1
-CellMat[11][10] = 1
-CellMat[12][10] = 1
-CellMat[16][16] = 1
 
 local function setCellColor(x, y)
     gfx.setColor(gfx.kColorWhite)
@@ -51,8 +27,8 @@ local function getLiveNeighbors(x, y)
     local liveNeighbors = 0
     for i = -1, 1, 1 do
         for j = -1, 1, 1 do
-            local validX = not (x + i == 0 or x + i > SQUARES_PER_SIDE)
-            local validY = not (y + j == 0 or y + j > SQUARES_PER_SIDE)
+            local validX = not (x + i == 0 or x + i > SquarePerSide)
+            local validY = not (y + j == 0 or y + j > SquarePerSide)
             local notSame = not (i == 0 and j == 0)
             if validX and validY and notSame then
                 if CellMat[x+i][y+j] == 1 then
@@ -67,8 +43,8 @@ end
 local function iterateMatrix(case)
     local xPos = 0
     local yPos = 0
-    for i = 1, SQUARES_PER_SIDE, 1 do
-        for j = 1, SQUARES_PER_SIDE, 1 do
+    for i = 1, SquarePerSide, 1 do
+        for j = 1, SquarePerSide, 1 do
             if case == 'update' then
                 local notCursor = not (i == Cursor.x and j == Cursor.y)
                 xPos = (i-1) * RectWidth
@@ -128,7 +104,7 @@ function playdate.leftButtonDown()
 end
 
 function playdate.rightButtonDown()
-    if Cursor.x < SQUARES_PER_SIDE then
+    if Cursor.x < SquarePerSide then
         moveCursor(1,0)
     end
 end
@@ -140,7 +116,7 @@ function playdate.upButtonDown()
 end
 
 function playdate.downButtonDown()
-    if Cursor.y < SQUARES_PER_SIDE then
+    if Cursor.y < SquarePerSide then
         moveCursor(0,1)
     end
 end
@@ -153,12 +129,43 @@ function playdate.AButtonDown()
     end
 end
 
-iterateMatrix('update')
+local function resetGrid(size)
+    SquarePerSide = size
+    RectWidth = 400/SquarePerSide
+    RectHeight = 240/SquarePerSide
+    for i = 1, SquarePerSide do
+        CellMat[i] = {}
+        for j = 1, SquarePerSide do
+            CellMat[i][j] = 0
+        end
+    end
+    for i = 1, SquarePerSide do
+        NextFrame[i] = {}
+        for j = 1, SquarePerSide do
+            NextFrame[i][j] = 0
+        end
+    end
+    iterateMatrix('update')
+    Cursor = {x = 1, y = 1}
+    setCursor()
+end
+
+resetGrid(5)
 setCursor()
+local menu = playdate.getSystemMenu()
+menu:addMenuItem("10x10", function()
+    resetGrid(10)
+end)
+menu:addMenuItem("20x20", function()
+    resetGrid(20)
+end)
+menu:addMenuItem("40x40", function()
+    resetGrid(40)
+end)
 function playdate.update()
     local ticks = playdate.getCrankTicks(CRANK_SPEED)
     Frames += ticks
-    if ticks ~= 0 then
+    if ticks > 0 then
         iterateMatrix('next')
         iterateMatrix('set')
         iterateMatrix('update')
