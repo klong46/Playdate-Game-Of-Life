@@ -2,6 +2,6 @@ name=Game of Life
 author=Kyle Long
 description=Game of Life simulation controller with the crank.
 bundleID=com.me.GoL
-version=1.0
+version=1.1
 buildNumber=100
 imagePath=SystemAssets

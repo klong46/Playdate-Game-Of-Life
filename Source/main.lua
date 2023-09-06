@@ -1,13 +1,21 @@
 import "CoreLibs/crank"
+import "CoreLibs/timer"
 
 local gfx = playdate.graphics
-local CRANK_SPEED = 10;
+local CRANK_SPEED = 6;
+local INIT_MOVE_DELAY = 200
+local MOVE_DELAY = 50
 local cellsPerSide = 10;
 local cellWidth = 0
 local cellHeight = 0
 local cursorPos = {x = 1, y = 1}
 local cellGrid = {}
 local nextCellGrid = {}
+local moveLeftTimer = nil
+local moveRightTimer = nil
+local moveUpTimer = nil
+local moveDownTimer = nil
+
 
 local function setCellColor(x, y)
     gfx.setColor(gfx.kColorWhite)
@@ -109,32 +117,64 @@ local function changeContinuousCells()
     end
 end
 
-function playdate.leftButtonDown()
+local function moveCursorLeft()
     if cursorPos.x > 1 then
         moveCursor(-1,0)
         changeContinuousCells()
     end
 end
 
-function playdate.rightButtonDown()
+local function moveCursorRight()
     if cursorPos.x < cellsPerSide then
         moveCursor(1,0)
         changeContinuousCells()
     end
 end
 
-function playdate.upButtonDown()
+local function moveCursorUp()
     if cursorPos.y > 1 then
         moveCursor(0,-1)
         changeContinuousCells()
     end
 end
 
-function playdate.downButtonDown()
+local function moveCursorDown()
     if cursorPos.y < cellsPerSide then
         moveCursor(0,1)
         changeContinuousCells()
     end
+end
+
+function playdate.rightButtonDown()
+    moveRightTimer = playdate.timer.keyRepeatTimerWithDelay(INIT_MOVE_DELAY, MOVE_DELAY, moveCursorRight)
+end
+
+function playdate.upButtonDown()
+    moveUpTimer = playdate.timer.keyRepeatTimerWithDelay(INIT_MOVE_DELAY, MOVE_DELAY, moveCursorUp)
+end
+
+function playdate.downButtonDown()
+    moveDownTimer = playdate.timer.keyRepeatTimerWithDelay(INIT_MOVE_DELAY, MOVE_DELAY, moveCursorDown)
+end
+
+function playdate.leftButtonDown()
+    moveLeftTimer = playdate.timer.keyRepeatTimerWithDelay(INIT_MOVE_DELAY, MOVE_DELAY, moveCursorLeft)
+end
+
+function playdate.leftButtonUp()
+    moveLeftTimer:remove()
+end
+
+function playdate.rightButtonUp()
+    moveRightTimer:remove()
+end
+
+function playdate.upButtonUp()
+    moveUpTimer:remove()
+end
+
+function playdate.downButtonUp()
+    moveDownTimer:remove()
 end
 
 function playdate.AButtonDown()
@@ -176,6 +216,7 @@ menu:addMenuItem("10x10", function()
 end)
 
 function playdate.update()
+    playdate.timer.updateTimers()
     local ticks = playdate.getCrankTicks(CRANK_SPEED)
     if ticks > 0 then
         iterateMatrix('next')
