@@ -1,23 +1,17 @@
 import "CoreLibs/crank"
 
--- print helpers:
--- print('x: ' .. x .. '  y: ' .. y)
--- print('i: ' .. i .. '  j: ' .. j)
-
 local gfx = playdate.graphics
-
-CRANK_SPEED = 10;
-SquarePerSide = 10;
-RectWidth = 0
-RectHeight = 0
-Cursor = {x = 1, y = 1}
-Frames = 1
-CellMat = {}
-NextFrame = {}
+local CRANK_SPEED = 10;
+local cellsPerSide = 10;
+local cellWidth = 0
+local cellHeight = 0
+local cursorPos = {x = 1, y = 1}
+local cellGrid = {}
+local nextCellGrid = {}
 
 local function setCellColor(x, y)
     gfx.setColor(gfx.kColorWhite)
-    if CellMat[x][y] == 1 then
+    if cellGrid[x][y] == 1 then
         gfx.setColor(gfx.kColorBlack)
     end
 end
@@ -26,11 +20,11 @@ local function getLiveNeighbors(x, y)
     local liveNeighbors = 0
     for i = -1, 1, 1 do
         for j = -1, 1, 1 do
-            local validX = not (x + i == 0 or x + i > SquarePerSide)
-            local validY = not (y + j == 0 or y + j > SquarePerSide)
+            local validX = not (x + i == 0 or x + i > cellsPerSide)
+            local validY = not (y + j == 0 or y + j > cellsPerSide)
             local notSame = not (i == 0 and j == 0)
             if validX and validY and notSame then
-                if CellMat[x+i][y+j] == 1 then
+                if cellGrid[x+i][y+j] == 1 then
                     liveNeighbors += 1
                 end
             end
@@ -40,43 +34,43 @@ local function getLiveNeighbors(x, y)
 end
 
 local function drawCells(x, y, fullReset)
-    local notCursor = not (x == Cursor.x and y == Cursor.y)
+    local notCursor = not (x == cursorPos.x and y == cursorPos.y)
     if fullReset then
         notCursor = true
     end
-    local xPos = (x - 1) * RectWidth
-    local yPos = (y - 1) * RectHeight
+    local xPos = (x - 1) * cellWidth
+    local yPos = (y - 1) * cellHeight
     setCellColor(x, y)
     if notCursor then
-        gfx.fillRect(xPos, yPos, RectWidth, RectHeight)
+        gfx.fillRect(xPos, yPos, cellWidth, cellHeight)
     end
 end
 
 local function iterateMatrix(case, fullReset)
-    for i = 1, SquarePerSide, 1 do
-        for j = 1, SquarePerSide, 1 do
+    for i = 1, cellsPerSide, 1 do
+        for j = 1, cellsPerSide, 1 do
             if case == 'update' then
                 drawCells(i, j, fullReset)
             elseif case == 'next' then
                 local liveNeighbors = getLiveNeighbors(i, j)
-                if CellMat[i][j] == 1 then
+                if cellGrid[i][j] == 1 then
                     if liveNeighbors < 2 or liveNeighbors > 3 then
-                        NextFrame[i][j] = 0
+                        nextCellGrid[i][j] = 0
                     elseif liveNeighbors == 2 or liveNeighbors == 3 then
-                        NextFrame[i][j] = 1
+                        nextCellGrid[i][j] = 1
                     end
                 elseif liveNeighbors == 3 then
-                    NextFrame[i][j] = 1
+                    nextCellGrid[i][j] = 1
                 end
             elseif case == 'set' then
-                CellMat[i][j] = NextFrame[i][j]
+                cellGrid[i][j] = nextCellGrid[i][j]
             end
         end
     end
 end
 
 local function drawCursor()
-    gfx.fillRect((Cursor.x-1) * RectWidth, (Cursor.y-1) * RectHeight, RectWidth, RectHeight)
+    gfx.fillRect((cursorPos.x-1) * cellWidth, (cursorPos.y-1) * cellHeight, cellWidth, cellHeight)
 end
 
 local function getCheckerboard()
@@ -90,22 +84,22 @@ local function setCursor()
 end
 
 local function deletePreviousCursor()
-    setCellColor(Cursor.x, Cursor.y)
+    setCellColor(cursorPos.x, cursorPos.y)
     drawCursor()
 end
 
 local function moveCursor(x, y)
     deletePreviousCursor()
-    Cursor.x += x
-    Cursor.y += y
+    cursorPos.x += x
+    cursorPos.y += y
     setCursor()
 end
 
 local function changeCellColor()
-    if CellMat[Cursor.x][Cursor.y] == 0 then
-        CellMat[Cursor.x][Cursor.y] = 1
+    if cellGrid[cursorPos.x][cursorPos.y] == 0 then
+        cellGrid[cursorPos.x][cursorPos.y] = 1
     else
-        CellMat[Cursor.x][Cursor.y] = 0
+        cellGrid[cursorPos.x][cursorPos.y] = 0
     end
 end
 
@@ -116,28 +110,28 @@ local function changeContinuousCells()
 end
 
 function playdate.leftButtonDown()
-    if Cursor.x > 1 then
+    if cursorPos.x > 1 then
         moveCursor(-1,0)
         changeContinuousCells()
     end
 end
 
 function playdate.rightButtonDown()
-    if Cursor.x < SquarePerSide then
+    if cursorPos.x < cellsPerSide then
         moveCursor(1,0)
         changeContinuousCells()
     end
 end
 
 function playdate.upButtonDown()
-    if Cursor.y > 1 then
+    if cursorPos.y > 1 then
         moveCursor(0,-1)
         changeContinuousCells()
     end
 end
 
 function playdate.downButtonDown()
-    if Cursor.y < SquarePerSide then
+    if cursorPos.y < cellsPerSide then
         moveCursor(0,1)
         changeContinuousCells()
     end
@@ -148,23 +142,23 @@ function playdate.AButtonDown()
 end
 
 local function resetGrid(size)
-    SquarePerSide = size
-    RectWidth = playdate.display.getWidth()/SquarePerSide
-    RectHeight = playdate.display.getHeight()/SquarePerSide
-    for i = 1, SquarePerSide do
-        CellMat[i] = {}
-        for j = 1, SquarePerSide do
-            CellMat[i][j] = 0
+    cellsPerSide = size
+    cellWidth = playdate.display.getWidth()/cellsPerSide
+    cellHeight = playdate.display.getHeight()/cellsPerSide
+    for i = 1, cellsPerSide do
+        cellGrid[i] = {}
+        for j = 1, cellsPerSide do
+            cellGrid[i][j] = 0
         end
     end
-    for i = 1, SquarePerSide do
-        NextFrame[i] = {}
-        for j = 1, SquarePerSide do
-            NextFrame[i][j] = 0
+    for i = 1, cellsPerSide do
+        nextCellGrid[i] = {}
+        for j = 1, cellsPerSide do
+            nextCellGrid[i][j] = 0
         end
     end
     iterateMatrix('update', true)
-    Cursor = {x = 1, y = 1}
+    cursorPos = {x = 1, y = 1}
     setCursor()
 end
 
@@ -183,7 +177,6 @@ end)
 
 function playdate.update()
     local ticks = playdate.getCrankTicks(CRANK_SPEED)
-    Frames += ticks
     if ticks > 0 then
         iterateMatrix('next')
         iterateMatrix('set')
