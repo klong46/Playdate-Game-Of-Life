@@ -7,8 +7,7 @@ import "CoreLibs/crank"
 local gfx = playdate.graphics
 
 CRANK_SPEED = 6;
-
-SquarePerSide = 5;
+SquarePerSide = 10;
 RectWidth = 0
 RectHeight = 0
 Cursor = {x = 1, y = 1}
@@ -40,19 +39,24 @@ local function getLiveNeighbors(x, y)
     return liveNeighbors
 end
 
-local function iterateMatrix(case)
-    local xPos = 0
-    local yPos = 0
+local function drawCells(x, y, fullReset)
+    local notCursor = not (x == Cursor.x and y == Cursor.y)
+    if fullReset then
+        notCursor = true
+    end
+    local xPos = (x - 1) * RectWidth
+    local yPos = (y - 1) * RectHeight
+    setCellColor(x, y)
+    if notCursor then
+        gfx.fillRect(xPos, yPos, RectWidth, RectHeight)
+    end
+end
+
+local function iterateMatrix(case, fullReset)
     for i = 1, SquarePerSide, 1 do
         for j = 1, SquarePerSide, 1 do
             if case == 'update' then
-                local notCursor = not (i == Cursor.x and j == Cursor.y)
-                xPos = (i-1) * RectWidth
-                yPos = (j-1) * RectHeight
-                setCellColor(i,j)
-                if notCursor then
-                    gfx.fillRect(xPos, yPos, RectWidth, RectHeight)
-                end
+                drawCells(i, j, fullReset)
             elseif case == 'next' then
                 local liveNeighbors = getLiveNeighbors(i, j)
                 if CellMat[i][j] == 1 then
@@ -131,8 +135,8 @@ end
 
 local function resetGrid(size)
     SquarePerSide = size
-    RectWidth = 400/SquarePerSide
-    RectHeight = 240/SquarePerSide
+    RectWidth = playdate.display.getWidth()/SquarePerSide
+    RectHeight = playdate.display.getHeight()/SquarePerSide
     for i = 1, SquarePerSide do
         CellMat[i] = {}
         for j = 1, SquarePerSide do
@@ -145,12 +149,12 @@ local function resetGrid(size)
             NextFrame[i][j] = 0
         end
     end
-    iterateMatrix('update')
+    iterateMatrix('update', true)
     Cursor = {x = 1, y = 1}
     setCursor()
 end
 
-resetGrid(5)
+resetGrid(10)
 setCursor()
 local menu = playdate.getSystemMenu()
 menu:addMenuItem("10x10", function()
@@ -168,7 +172,7 @@ function playdate.update()
     if ticks > 0 then
         iterateMatrix('next')
         iterateMatrix('set')
-        iterateMatrix('update')
+        iterateMatrix('update', false)
     end
 end
 
